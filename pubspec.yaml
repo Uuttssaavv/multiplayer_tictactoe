@@ -13,7 +13,7 @@ dependencies:
   dio: ^4.0.6
   flutter:
     sdk: flutter
-  flutter_riverpod: ^1.0.4
+  flutter_riverpod: ^2.0.0-dev.8
   socket_io_client: ^2.0.0
 
 dev_dependencies:

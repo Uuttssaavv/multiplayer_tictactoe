@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 
 const app = express();
 const port = process.env.PORT || 3000;
+var server = require("http").Server(app);
 var server = http.createServer(app);
 const Room = require("./model/room");
 var io = require("socket.io")(server);
@@ -16,9 +17,8 @@ const DB =
   "mongodb+srv://rivaan:test123@cluster0.rmhtu.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
 
 io.on("connection", (socket) => {
-  console.log("connected!");
+  console.log("Socket connected");
   socket.on("createRoom", async ({ nickname }) => {
-    console.log(nickname);
     try {
       // room is created
       let room = new Room();
@@ -30,12 +30,12 @@ io.on("connection", (socket) => {
       room.players.push(player);
       room.turn = player;
       room = await room.save();
-      console.log(room);
       const roomId = room._id.toString();
 
       socket.join(roomId);
       // io -> send data to everyone
       // socket -> sending data to yourself
+      console.log({ roomId });
       io.to(roomId).emit("createRoomSuccess", room);
     } catch (e) {
       console.log(e);
@@ -45,6 +45,7 @@ io.on("connection", (socket) => {
   socket.on("joinRoom", async ({ nickname, roomId }) => {
     try {
       if (!roomId.match(/^[0-9a-fA-F]{24}$/)) {
+        console.log(`not match ${roomId}`);
         socket.emit("errorOccurred", "Please enter a valid room ID.");
         return;
       }
@@ -77,7 +78,7 @@ io.on("connection", (socket) => {
   socket.on("tap", async ({ index, roomId }) => {
     try {
       let room = await Room.findById(roomId);
-
+      console.log(room.turn);
       let choice = room.turn.playerType; // x or o
       if (room.turnIndex == 0) {
         room.turn = room.players[1];
