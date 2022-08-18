@@ -15,7 +15,13 @@ app.use(express.json());
 
 const DB =
   "mongodb+srv://rivaan:test123@cluster0.rmhtu.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
-
+function resolveAfter5Seconds(x) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(x);
+    }, 5000);
+  });
+}
 io.on("connection", (socket) => {
   console.log("Socket connected");
   socket.on("createRoom", async ({ nickname }) => {
@@ -35,8 +41,11 @@ io.on("connection", (socket) => {
       socket.join(roomId);
       // io -> send data to everyone
       // socket -> sending data to yourself
+
+      // resolveAfter5Seconds(() =>
       console.log({ roomId });
       io.to(roomId).emit("createRoomSuccess", room);
+      // );
     } catch (e) {
       console.log(e);
     }
@@ -61,9 +70,11 @@ io.on("connection", (socket) => {
         room.players.push(player);
         room.isJoin = false;
         room = await room.save();
-        io.to(roomId).emit("joinRoomSuccess", room);
-        io.to(roomId).emit("updatePlayers", room.players);
-        io.to(roomId).emit("updateRoom", room);
+        resolveAfter5Seconds(() => {
+          io.to(roomId).emit("joinRoomSuccess", room);
+          io.to(roomId).emit("updatePlayers", room.players);
+          io.to(roomId).emit("updateRoom", room);
+        });
       } else {
         socket.emit(
           "errorOccurred",

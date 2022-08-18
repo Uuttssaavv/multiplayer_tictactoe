@@ -1,11 +1,30 @@
+import 'dart:async';
+
 import 'package:flutter_project/data/socket_client.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 
+// final strm = StreamProvider((ref) async* {
+//
+//   final socket = SocketServices();
+//   var man = socket.socketClient.io;
+//   // print(man.)
+// });
+
 class SocketServices {
   final _socketClient = SocketClient.instance.socket!;
-
+  // final SocketServices _ss = SocketServices();
+  // get x => ref.watch(socketService);
+  // final StreamProviderRef ref;
+  // SocketServices(this.ref);
+  // get _stream => ref.watch(_socketService);
   Socket get socketClient => _socketClient;
+//providers
+  final socketResponse = StreamController<String>();
 
+  // void Function(String) get addResponse => _socketResponse.sink.add;
+
+  // Stream<String> get getResponse => _socketResponse.stream;
+  // final StreamProviderRef ref;
   // EMITS
   void createRoom(String nickname) {
     if (nickname.isNotEmpty) {
@@ -35,11 +54,18 @@ class SocketServices {
 
   // LISTENERS
   void createRoomSuccessListener(Function(Map<String, dynamic> data) listener) {
-    _socketClient.on('createRoomSuccess', (data) => listener(data));
+    _socketClient.on('createRoomSuccess', (data) {
+      print('data is received at ${DateTime.now().microsecondsSinceEpoch} ');
+      socketResponse.sink.add(data.toString());
+    });
   }
 
-  void joinRoomSuccessListener(Function(Map<String, dynamic> data) listener) {
-    _socketClient.on('joinRoomSuccess', (data) => listener(data));
+  Stream<Map> joinRoomSuccessListener(
+      Function(Map<String, dynamic> data) listener) async* {
+    _socketClient.on('joinRoomSuccess', (data) async* {
+      yield data;
+    });
+    yield {};
   }
 
   // void lobbyListener() {

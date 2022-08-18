@@ -5,8 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 final dataProvider =
     StateNotifierProvider<DataProvider, GameState>(DataProvider.new);
 
-final socketService = Provider((ref) {
-  return SocketServices();
+final socketService = StreamProvider((ref) {
+  final ss = SocketServices();
+  ss.createRoomSuccessListener((_) {});
+  return ss.socketResponse.stream;
 });
 
 class GameState {
@@ -51,17 +53,29 @@ class GameState {
 
 class DataProvider extends StateNotifier<GameState> {
   final StateNotifierProviderRef ref;
-  DataProvider(this.ref) : super(GameState()) {
-    showError();
-  }
-  SocketServices get _socketServices => ref.read(socketService);
 
-  void createRoom() {
+  DataProvider(this.ref) : super(GameState()) {
+    // showError();
+  }
+  get value => ref.read(socketService);
+  final _socketServices = SocketServices();
+  void createRoom() async {
     state = state.copyWith(
       roomData: {},
       isLoading: true,
     );
     _socketServices.createRoomSuccessListener(showJoined);
+    final y = ref.watch(socketService);
+    final x = ref.listen(socketService, (l, m) {
+      print('l=$l');
+      print('m=$m');
+    });
+    print('x.value=${x.read()}');
+    // print('createRoomListener data=${data.single.asStream().listen((event) {
+    print(y.asData);
+    print('event=${y.value}');
+    // })}');
+    print('listerner value=$value');
     _socketServices.updateRoomListener(showJoined);
     _socketServices.createRoom('utsav');
     state = state.copyWith(
@@ -69,19 +83,20 @@ class DataProvider extends StateNotifier<GameState> {
     );
   }
 
-  void joinRoom(String roomId) {
-    _socketServices.joinRoomSuccessListener(showJoined);
-    _socketServices.joinRoom('iphone', roomId);
-  }
+  // void joinRoom(String roomId) async {
+  //   final data = _socketServices.joinRoomSuccessListener(showJoined);
+  //   print('joinRoomListener data=${await data.single}');
+  //   _socketServices.joinRoom('iphone', roomId);
+  // }
 
-  void showError() {
-    _socketServices.errorOccuredListener(oError);
-  }
+  // void showError() {
+  //   _socketServices.errorOccuredListener(oError);
+  // }
 
-  void oError(String data) {
-    print('error =$data');
-    state = GameState(errorMessage: data);
-  }
+  // void oError(String data) {
+  //   print('error =$data');
+  //   state = GameState(errorMessage: data);
+  // }
 
   void showJoined(Map<String, dynamic> data) {
     print('lenght');

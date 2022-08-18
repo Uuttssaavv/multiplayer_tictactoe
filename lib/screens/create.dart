@@ -25,11 +25,11 @@ class CreateRoomState extends ConsumerState {
         actions: [
           TextButton(
             onPressed: () {
-              if (kIsWeb) {
-                provider.createRoom();
-              } else {
-                provider.joinRoom(_controller.text);
-              }
+              // if (kIsWeb) {
+              provider.createRoom();
+              // } else {
+              //   provider.joinRoom(_controller.text);
+              // }
               if ((state.roomData['players']?.length ?? 0) >= 2) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
