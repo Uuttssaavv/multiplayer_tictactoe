@@ -32,6 +32,7 @@ io.on("connection", (socket) => {
         socketID: socket.id,
         nickname,
         playerType: "X",
+        isCreator: true,
       };
       room.players.push(player);
       room.turn = player;
@@ -82,30 +83,10 @@ io.on("connection", (socket) => {
       console.log(e);
     }
   });
-  // socket.on("getPlayers", async ({ roomId }) => {
-  //   console.log(roomId);
-  //   try {
-  //     if (!roomId.match(/^[0-9a-fA-F]{24}$/)) {
-  //       console.log(`not match ${roomId}`);
-  //       socket.emit("errorOccurred", "Please enter a valid room ID.");
-  //       return;
-  //     }
-  //     let room = await Room.findById(roomId);
-
-  //     socket.join(roomId);
-  //     room.isJoin = false;
-  //     room = await room.save();
-
-  //     io.to(roomId).emit("updatePlayers", room.players);
-  //   } catch (e) {
-  //     console.log(e);
-  //   }
-  // });
 
   socket.on("tap", async ({ index, roomId }) => {
     try {
       let room = await Room.findById(roomId);
-      console.log(room.turn);
       let choice = room.turn.playerType; // x or o
       if (room.turnIndex == 0) {
         room.turn = room.players[1];
