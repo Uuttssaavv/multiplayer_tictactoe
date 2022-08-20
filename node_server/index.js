@@ -42,10 +42,8 @@ io.on("connection", (socket) => {
       // io -> send data to everyone
       // socket -> sending data to yourself
 
-      // resolveAfter5Seconds(() =>
       console.log({ roomId });
       io.to(roomId).emit("createRoomSuccess", room);
-      // );
     } catch (e) {
       console.log(e);
     }
@@ -70,11 +68,10 @@ io.on("connection", (socket) => {
         room.players.push(player);
         room.isJoin = false;
         room = await room.save();
-        resolveAfter5Seconds(() => {
-          io.to(roomId).emit("joinRoomSuccess", room);
-          io.to(roomId).emit("updatePlayers", room.players);
-          io.to(roomId).emit("updateRoom", room);
-        });
+
+        io.to(roomId).emit("joinRoomSuccess", room);
+        io.to(roomId).emit("updatePlayers", room.players);
+        io.to(roomId).emit("updateRoom", room);
       } else {
         socket.emit(
           "errorOccurred",
@@ -85,6 +82,25 @@ io.on("connection", (socket) => {
       console.log(e);
     }
   });
+  // socket.on("getPlayers", async ({ roomId }) => {
+  //   console.log(roomId);
+  //   try {
+  //     if (!roomId.match(/^[0-9a-fA-F]{24}$/)) {
+  //       console.log(`not match ${roomId}`);
+  //       socket.emit("errorOccurred", "Please enter a valid room ID.");
+  //       return;
+  //     }
+  //     let room = await Room.findById(roomId);
+
+  //     socket.join(roomId);
+  //     room.isJoin = false;
+  //     room = await room.save();
+
+  //     io.to(roomId).emit("updatePlayers", room.players);
+  //   } catch (e) {
+  //     console.log(e);
+  //   }
+  // });
 
   socket.on("tap", async ({ index, roomId }) => {
     try {
