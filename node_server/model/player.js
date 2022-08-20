@@ -16,6 +16,7 @@ const playerSchema = new mongoose.Schema({
     required: true,
     type: String,
   },
+  isCreator: { type: Boolean, default: false },
 });
 
 module.exports = playerSchema;
