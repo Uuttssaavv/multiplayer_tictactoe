@@ -1,13 +1,14 @@
 import 'package:flutter_project/data/socket_methods.dart';
 import 'package:flutter_project/models/player_model.dart';
+import 'package:flutter_project/resources/game_methods.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final dataProvider =
     StateNotifierProvider<DataProvider, GameState>(DataProvider.new);
 
 final socketService = StreamProvider((ref) {
-  final ss = SocketServices();
-  ss.createRoomSuccessListener((_) {});
+  final ss = ref.read(socketProvider);
+
   return ss.socketResponse.stream;
 });
 
@@ -20,6 +21,10 @@ class GameState {
     this.player2,
     this.isLoading = false,
     this.errorMessage,
+    this.hasError = false,
+    this.isTapped = false,
+    this.isCreator = false,
+    this.isRoundCompleted = false,
   });
   final Map<String, dynamic> roomData;
   final List<String> displayElements;
@@ -28,6 +33,10 @@ class GameState {
   final Player? player2;
   final bool isLoading;
   final String? errorMessage;
+  final bool hasError;
+  final bool isTapped;
+  final bool isCreator;
+  final bool isRoundCompleted;
 //getters
 
   GameState copyWith({
@@ -38,110 +47,130 @@ class GameState {
     bool? isLoading,
     Player? player2,
     String? errorMessage,
+    bool? hasError,
+    bool? isTapped,
+    bool? isCreator,
+    bool? isRoundCompleted,
   }) {
     return GameState(
-      roomData: roomData ?? this.roomData,
+      roomData: roomData?['_id'] != null ? roomData! : this.roomData,
       displayElements: displayElements ?? this.displayElements,
       filledBoxes: filledBoxes ?? this.filledBoxes,
       player1: player1 ?? this.player1,
       player2: player2 ?? this.player2,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage ?? this.errorMessage,
+      hasError: hasError ?? this.hasError,
+      isTapped: isTapped ?? this.isTapped,
+      isCreator: isCreator ?? this.isCreator,
+      isRoundCompleted: isRoundCompleted ?? this.isRoundCompleted,
     );
   }
 }
 
 class DataProvider extends StateNotifier<GameState> {
   final StateNotifierProviderRef ref;
-
-  DataProvider(this.ref) : super(GameState()) {
-    // showError();
-  }
-  get value => ref.read(socketService);
-  final _socketServices = SocketServices();
-  void createRoom() async {
+  bool isCreator = false;
+  DataProvider(this.ref) : super(GameState());
+  GameState? get asyncState => ref
+      .listen(socketService,
+          (AsyncValue<GameState>? _, AsyncValue<GameState> data) {
+        var value = data.value;
+        if (value?.isTapped == true) {
+          final takenElement = value?.displayElements ?? [];
+          int valueIndex = takenElement.indexWhere((element) => element != '');
+          updateDisplayElements(valueIndex, takenElement[valueIndex]);
+        }
+        state = state.copyWith(
+          isLoading: value?.isLoading,
+          roomData: value?.roomData,
+          errorMessage: value?.errorMessage,
+          player1: value?.player1,
+          player2: value?.player2,
+          hasError: value?.hasError,
+          isCreator: isCreator,
+        );
+      })
+      .read()
+      .value;
+  SocketServices get _socketServices => ref.read(socketProvider);
+  void createRoom(String name) async {
     state = state.copyWith(
-      roomData: {},
       isLoading: true,
     );
-    _socketServices.createRoomSuccessListener(showJoined);
-    final y = ref.watch(socketService);
-    final x = ref.listen(socketService, (l, m) {
-      print('l=$l');
-      print('m=$m');
-    });
-    print('x.value=${x.read()}');
-    // print('createRoomListener data=${data.single.asStream().listen((event) {
-    print(y.asData);
-    print('event=${y.value}');
-    // })}');
-    print('listerner value=$value');
-    _socketServices.updateRoomListener(showJoined);
-    _socketServices.createRoom('utsav');
+    _socketServices.createRoom(name);
+    _socketServices.createRoomSuccessListener();
+    _socketServices.updatePlayersStateListener();
+    _socketServices.updateRoomListener();
     state = state.copyWith(
+      roomData: asyncState?.roomData,
       isLoading: false,
     );
   }
 
-  // void joinRoom(String roomId) async {
-  //   final data = _socketServices.joinRoomSuccessListener(showJoined);
-  //   print('joinRoomListener data=${await data.single}');
-  //   _socketServices.joinRoom('iphone', roomId);
-  // }
-
-  // void showError() {
-  //   _socketServices.errorOccuredListener(oError);
-  // }
-
-  // void oError(String data) {
-  //   print('error =$data');
-  //   state = GameState(errorMessage: data);
-  // }
-
-  void showJoined(Map<String, dynamic> data) {
-    print('lenght');
-    print(data['players']?.length);
-    print(data);
-    print('data=$data');
-    updateRoomData(data);
-    // state = GameState(isLoading: false, roomData: (data['players']));
-  }
-
-  void updateRoomData(Map<String, dynamic> data) {
-    state = GameState(isLoading: false, roomData: data);
-    print('updated room data');
-  }
-
-  void updatePlayer1(Map<String, dynamic> player1Data) {
-    state = state.copyWith(isLoading: true);
-    Player player1 = Player.fromMap(player1Data);
+  void joinRoom(String name, String roomId) {
     state = state.copyWith(
-      player1: player1,
-      isLoading: false,
+      isLoading: true,
+    );
+    _socketServices.joinRoom(name, roomId);
+    _socketServices.joinRoomSuccessListener();
+    _socketServices.updatePlayersStateListener();
+    _socketServices.errorOccuredListener();
+
+    state = state.copyWith(
+      isLoading: asyncState?.isLoading,
+      roomData: asyncState?.roomData,
+      hasError: asyncState?.hasError,
+      errorMessage: asyncState?.errorMessage,
     );
   }
 
-  void updatePlayer2(Map<String, dynamic> player2Data) {
-    state = state.copyWith(isLoading: true);
-    Player player2 = Player.fromMap(player2Data);
-    state = state.copyWith(
-      player2: player2,
-      isLoading: false,
-    );
+  void tapGrid(int index, String roomId, List<String> displayElements) {
+    _socketServices.tapGrid(index, roomId, displayElements);
   }
 
   void updateDisplayElements(int index, String choice) {
-    state = state.copyWith(isLoading: true);
-    print(index);
-    print(choice);
-    final displayElement = state.displayElements;
-    displayElement[index] = choice;
-
+    var stateElements = [...state.displayElements];
+    stateElements[index] = choice;
+    int filledBox = stateElements.where((element) => element != '').length;
+    checkGame(stateElements);
     state = state.copyWith(
-      filledBoxes: state.filledBoxes + 1,
-      displayElements: displayElement,
-      isLoading: false,
+      displayElements: stateElements,
+      filledBoxes: filledBox,
     );
+  }
+
+  void checkGame(List<String> displayElements) {
+    final GameMethods gameMethods = GameMethods();
+    final winner = gameMethods.checkWinner(displayElements);
+    if (state.filledBoxes == 9 && winner == '') {
+      print('match draw');
+    }
+    if (winner != '') {
+      state = state.copyWith(filledBoxes: 9);
+      var winnerSocketId = '';
+      if (winner == state.player1?.playerType) {
+        winnerSocketId = state.player1!.socketID;
+      } else {
+        winnerSocketId = state.player2!.socketID;
+      }
+      _socketServices.winner(winnerSocketId, state.roomData['_id']);
+    }
+  }
+
+  void clearBoard() {
+    final GameMethods gameMethods = GameMethods();
+
+    final winner = gameMethods.checkWinner(state.displayElements);
+    print(winner);
+    if (winner != '' || state.filledBoxes == 9) {
+      for (int i = 0; i < 9; i++) {
+        updateDisplayElements(i, '');
+      }
+    } else {
+      print(state.roomData);
+      print('you cannot reset game');
+    }
   }
 
   void setFilledBoxesTo0() {
