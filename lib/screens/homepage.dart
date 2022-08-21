@@ -27,7 +27,7 @@ class HomepageState extends ConsumerState {
           final SocketServices services = ref.watch(socketProvider);
           services.tappedListener();
           services.pointIncreaseListener(ref.watch(dataProvider));
-          services.endGameListener();
+          // services.endGameListener();
         },
       );
     });

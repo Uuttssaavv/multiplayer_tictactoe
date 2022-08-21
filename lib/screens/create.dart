@@ -26,7 +26,7 @@ class CreateRoomState extends ConsumerState {
           TextButton(
             onPressed: () {
               // if (kIsWeb) {
-              provider.createRoom();
+              provider.createRoom(_controller.text);
               // } else {
               //   provider.joinRoom(_controller.text);
               // }
