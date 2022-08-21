@@ -130,4 +130,10 @@ class SocketServices {
       socketResponse.sink.add(winnerState);
     });
   }
+
+  void endGameListener() {
+    _socketClient.on('endGame', (playerData) {
+      // showGameDialog('${playerData['nickname']} won the game!');
+    });
+  }
 }

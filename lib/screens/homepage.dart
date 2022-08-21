@@ -39,6 +39,7 @@ class HomepageState extends ConsumerState {
     GameState state = ref.watch(dataProvider);
     final Player? currentPlayer =
         state.isCreator ? state.player1 : state.player2;
+    print(state.player1?.toMap());
     return Scaffold(
       appBar: AppBar(
         actions: [
@@ -47,6 +48,19 @@ class HomepageState extends ConsumerState {
             child: pointsTable(state, Player.fromMap(state.roomData['turn'])),
           ),
         ],
+        // actions: [
+        //   TextButton(
+        //     onPressed: () {
+        //       ref.read(dataProvider.notifier).updatePlayersListener(
+        //             state.roomData['_id'] ?? '',
+        //           );
+        //     },
+        //     child: const text(
+        //       'Sync',
+        //       color: Colors.white,
+        //     ),
+        //   ),
+        // ],
       ),
       body: Center(
         child: Column(
@@ -56,6 +70,14 @@ class HomepageState extends ConsumerState {
               canTap:
                   state.roomData['turn']['nickname'] == currentPlayer?.nickname,
             ),
+            // text(
+            //   (state.roomData['turn']['nickname'] == currentPlayer?.nickname
+            //           ? 'Your turn'
+            //           : "Opponent's turn") +
+            //       ("(${state.roomData['turn']['playerType']})"),
+            //   isLongText: true,
+            // ),
+
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: 24.0,
