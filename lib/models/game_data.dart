@@ -20,7 +20,7 @@ abstract class GameData {
 }
 
 class CreateRoomData extends GameData {
-  CreateRoomData({super.roomData});
+  CreateRoomData({super.roomData, super.isCreator});
 }
 
 class JoinRoomData extends GameData {
@@ -43,9 +43,17 @@ class UpdatePlayerData extends GameData {
   });
 }
 
+class PointIncreaseData extends GameData {
+  PointIncreaseData({
+    super.player1,
+    super.player2,
+  });
+}
+
 class UpdateRoomData extends GameData {
   UpdateRoomData({
     super.roomData,
+    super.displayElements,
   });
 }
 
@@ -57,8 +65,7 @@ class UpdateGameData extends GameData {
 }
 
 class EndGameData extends GameData {
-  final String winner;
-  final String ponts;
+  final Player winner;
 
-  EndGameData({required this.winner, required this.ponts});
+  EndGameData({required this.winner});
 }

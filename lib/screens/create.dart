@@ -1,76 +1,61 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_project/providers/providers.dart';
 import 'package:flutter_project/widgets/text.dart';
+import 'package:flutter_project/widgets/text_field.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class CreateRoom extends ConsumerStatefulWidget {
-  const CreateRoom({Key? key}) : super(key: key);
-
+class CreateRoom extends StatefulWidget {
+  const CreateRoom({Key? key, this.isJoin = false}) : super(key: key);
+  final bool isJoin;
   @override
-  CreateRoomState createState() => CreateRoomState();
+  State<CreateRoom> createState() => _CreateRoomState();
 }
 
-class CreateRoomState extends ConsumerState {
-  late DataProvider provider;
-  late GameState state;
-  final TextEditingController _controller = TextEditingController();
+class _CreateRoomState extends State<CreateRoom> {
+  final TextEditingController _nameController = TextEditingController();
+
+  final TextEditingController _roomController = TextEditingController();
   @override
   Widget build(BuildContext context) {
-    provider = ref.watch(dataProvider.notifier);
-    state = ref.watch(dataProvider);
-
-    return Scaffold(
-      appBar: AppBar(
-        actions: [
-          TextButton(
-            onPressed: () {
-              // if (kIsWeb) {
-              provider.createRoom(_controller.text);
-              // } else {
-              //   provider.joinRoom(_controller.text);
-              // }
-              if ((state.roomData['players']?.length ?? 0) >= 2) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: text('players are'),
-                  ),
-                );
-              }
-            },
-            child: const text(
-              kIsWeb ? 'Cr' : 'rr',
-              color: Colors.white,
-            ),
+    return Consumer(
+      builder: (context, ref, _) {
+        DataProvider provider = ref.watch(dataProvider.notifier);
+        // state = ref.watch(dataProvider);
+        return Scaffold(
+          appBar: AppBar(
+            actions: [
+              TextButton(
+                onPressed: () {
+                  if (widget.isJoin) {
+                    provider.createRoom(_nameController.text);
+                  } else {
+                    provider.joinRoom(
+                        _nameController.text, _roomController.text);
+                  }
+                  // Navigator.pushNamed(context, WaitingLobby.routeName);
+                },
+                child: text(
+                  widget.isJoin ? 'Join' : 'Create',
+                  color: Colors.white,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-      body: Column(
-        children: [
-          TextField(
-            controller: _controller,
+          body: Column(
+            children: [
+              CustomTextField(
+                hintText: 'Name',
+                controller: _nameController,
+              ),
+              if (widget.isJoin)
+                CustomTextField(
+                  hintText: 'Name',
+                  controller: _roomController,
+                ),
+            ],
           ),
-          Center(
-            child: text(
-              '${state.roomData}',
-              isLongText: true,
-            ),
-          ),
-          Center(
-            child: text(
-              '${provider.state.displayElements}',
-              isLongText: true,
-            ),
-          ),
-          Center(
-            child: text(
-              '${state.roomData['players']?.length}',
-              isLongText: true,
-            ),
-          ),
-          Center(child: text(state.errorMessage ?? 'No msg'))
-        ],
-      ),
+        );
+      },
     );
   }
 }

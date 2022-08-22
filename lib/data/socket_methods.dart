@@ -1,17 +1,20 @@
 import 'dart:async';
 
 import 'package:flutter_project/data/socket_client.dart';
+import 'package:flutter_project/models/game_data.dart';
 import 'package:flutter_project/models/player_model.dart';
-import 'package:flutter_project/providers/providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 
-final socketProvider = Provider((_) => SocketServices());
+final socketProvider = Provider(SocketServices.new);
 
 class SocketServices {
-  final _socketClient = SocketClient.instance.socket!;
-  Socket get socketClient => _socketClient;
-  final socketResponse = StreamController<GameState>();
+  final ProviderRef ref;
+  Socket get _socketClient => ref.read(socketClientProvider).socket!;
+  final socketResponse = StreamController<GameData>();
+  SocketServices(this.ref) {
+    //
+  }
   // EMITS
   void createRoom(String nickname) {
     if (nickname.isNotEmpty) {
@@ -47,43 +50,42 @@ class SocketServices {
   }
 
   // LISTENERS
-  void createRoomSuccessListener() {
+  void onCreateRoomSuccess() {
     _socketClient.on('createRoomSuccess', (data) {
-      socketResponse.sink.add(GameState(
-        isLoading: false,
-        roomData: data,
-        isCreator: true,
-      ));
-    });
-  }
-
-  void joinRoomSuccessListener() {
-    _socketClient.on('joinRoomSuccess', (data) {
-      socketResponse.sink.add(GameState(
-        isLoading: false,
-        roomData: data,
-        isCreator: false,
-      ));
-    });
-  }
-
-  void errorOccuredListener() {
-    _socketClient.on('errorOccurred', (e) {
       socketResponse.sink.add(
-        GameState(
-          errorMessage: e,
-          hasError: true,
-          isLoading: false,
+        CreateRoomData(
+          roomData: data,
+          isCreator: true,
         ),
       );
     });
   }
 
-  void updatePlayersStateListener() {
+  void onJoinRoomSuccess() {
+    _socketClient.on('joinRoomSuccess', (data) {
+      socketResponse.sink.add(
+        JoinRoomData(
+          roomData: data,
+          isCreator: false,
+        ),
+      );
+    });
+  }
+
+  void onErrorOccured() {
+    _socketClient.on('errorOccurred', (e) {
+      socketResponse.sink.add(
+        JoinRoomErrorData(
+          errorMessage: e,
+        ),
+      );
+    });
+  }
+
+  void onPlayerUpdated() {
     _socketClient.on('updatePlayers', (playerData) {
       socketResponse.sink.add(
-        GameState(
-          isLoading: false,
+        UpdatePlayerData(
           player1: Player.fromMap(playerData[0]),
           player2: Player.fromMap(playerData[1]),
         ),
@@ -91,21 +93,26 @@ class SocketServices {
     });
   }
 
-  void updateRoomListener() {
+  void onRoomUpdated() {
     _socketClient.on('updateRoom', (data) {
-      socketResponse.sink.add(GameState(isLoading: false, roomData: data));
+      socketResponse.sink.add(
+        UpdateRoomData(
+          roomData: data,
+        ),
+      );
     });
   }
 
-  void tappedListener() {
+  void onGameUpdated() {
     _socketClient.on('tapped', (data) {
+      print('tapped data');
+
       if (data != null) {
         var emptyList = List.generate(9, (index) => '');
         emptyList[data['index']] = data['choice'];
         socketResponse.sink.add(
-          GameState(
+          UpdateGameData(
             displayElements: emptyList,
-            isTapped: true,
             roomData: data['room'],
           ),
         );
@@ -113,27 +120,31 @@ class SocketServices {
     });
   }
 
-  void pointIncreaseListener(GameState state) {
+  void onPointIncreased(String player1SocketId) {
     _socketClient.on('pointIncrease', (playerData) {
-      GameState winnerState;
-      if (playerData['socketID'] == state.player1?.socketID) {
-        winnerState = GameState(
-          isLoading: false,
+      print('pointIncrease data');
+      GameData gameData;
+      if (playerData['socketID'] == player1SocketId) {
+        gameData = PointIncreaseData(
           player1: Player.fromMap(playerData),
         );
       } else {
-        winnerState = GameState(
-          isLoading: false,
+        gameData = PointIncreaseData(
           player2: Player.fromMap(playerData),
         );
       }
-      socketResponse.sink.add(winnerState);
+      socketResponse.sink.add(gameData);
     });
   }
 
-  void endGameListener() {
+  void onEndGame() {
     _socketClient.on('endGame', (playerData) {
-      // showGameDialog('${playerData['nickname']} won the game!');
+      print('match end\n $playerData');
+      socketResponse.sink.add(
+        EndGameData(
+          winner: Player.fromMap(playerData),
+        ),
+      );
     });
   }
 }

@@ -15,12 +15,15 @@ class GameState {
     this.isCreator = false,
     this.isRoundCompleted = false,
     this.gameState = Game.idle,
+    this.winner,
+    this.round = 0,
   });
   final Map<String, dynamic> roomData;
   final List<String> displayElements;
   final int filledBoxes;
   final Player? player1;
   final Player? player2;
+  final Player? winner;
   final bool isLoading;
   final String? errorMessage;
   final bool hasError;
@@ -28,7 +31,7 @@ class GameState {
   final bool isCreator;
   final bool isRoundCompleted;
   final Game gameState;
-
+  final int round;
   GameState copyWith({
     Map<String, dynamic>? roomData,
     List<String>? displayElements,
@@ -37,11 +40,10 @@ class GameState {
     bool? isLoading,
     Player? player2,
     String? errorMessage,
-    bool? hasError,
-    bool? isTapped,
     bool? isCreator,
-    bool? isRoundCompleted,
     Game? gameState,
+    Player? winner,
+    int? round,
   }) {
     return GameState(
       roomData: roomData?['_id'] != null ? roomData! : this.roomData,
@@ -51,11 +53,10 @@ class GameState {
       player2: player2 ?? this.player2,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage ?? this.errorMessage,
-      hasError: hasError ?? this.hasError,
-      isTapped: isTapped ?? this.isTapped,
       isCreator: isCreator ?? this.isCreator,
-      isRoundCompleted: isRoundCompleted ?? this.isRoundCompleted,
       gameState: gameState ?? this.gameState,
+      winner: winner ?? this.winner,
+      round: round ?? this.round,
     );
   }
 }
