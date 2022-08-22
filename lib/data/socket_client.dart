@@ -1,11 +1,12 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
-class SocketClient {
-  IO.Socket? socket;
-  static SocketClient? _instance;
+final socketClientProvider = Provider((_) => SocketClient());
 
-  SocketClient._internal() {
-    print('connecting socket client');
+class SocketClient {
+  late final IO.Socket? socket;
+
+  SocketClient() {
     socket = IO.io(
       'http://localhost:3000',
       <String, dynamic>{
@@ -14,15 +15,5 @@ class SocketClient {
       },
     );
     socket!.connect();
-    socket!.onerror((e) => print(e));
-    socket!.onConnect((h) {
-      print('hello hi $h');
-    });
-    // print(x.connected);
-  }
-
-  static SocketClient get instance {
-    _instance ??= SocketClient._internal();
-    return _instance!;
   }
 }
