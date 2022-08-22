@@ -113,13 +113,13 @@ io.on("connection", (socket) => {
         (playerr) => playerr.socketID == winnerSocketId
       );
       player.points += 1;
+      room.currentRound += 1;
       room = await room.save();
-
-      if (player.points >= room.maxRounds) {
+      // io.to(roomId).emit("updateRoom", room);
+      if (room.currentRound > room.maxRounds) {
         io.to(roomId).emit("endGame", player);
-      } else {
-        io.to(roomId).emit("pointIncrease", player);
       }
+      io.to(roomId).emit("pointIncrease", player);
     } catch (e) {
       console.log(e);
     }
