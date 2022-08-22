@@ -60,6 +60,7 @@ class _CreateRoomState extends State<CreateRoom> {
                 color: Colors.black,
                 fontweight: FontWeight.w600,
                 size: 36.0,
+                isCentered: true,
               ),
               const SizedBox(height: 36.0),
               Padding(
