@@ -25,4 +25,5 @@ Inspired from the provider version of this app which can be found [here.](https:
 ## Screenshots
 <img src="screenshots/ss3.png" height="300px">
 <img src="screenshots/ss2.png" height="300px">
+<img src="screenshots/ss4.png" height="300px">
 <img src="screenshots/ss1.png" height="300px">
